@@ -1,17 +1,35 @@
 import express from 'express';
+import { findMovieByTitle } from './functions/chuy.js';
+import cors from 'cors'
 
 const test = ""
 const port = 3000
 
 const app = express();
 
-app.use(express.json());
+app.use(cors());
 
+app.use(express.json());
 
 app.get('/', (req, res) => {
     res.json({ message: 'Base url test!' });
 });
 
+app.get('/movies/:title', async (req, res) => {
+
+    const {title} = req.params  
+
+    try {
+        const movie = await findMovieByTitle(title)
+        if (!movie) {
+            return res.status(404).send('Movie not found');
+        } else {
+            res.status(200).json(movie)
+        }
+    } catch (error) {
+        
+    }
+})
 
 app.get('/api', (req, res) => {
     res.json({ message: 'Hello from Express api with vercel!' });
