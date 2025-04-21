@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'Base url test!' });
 });
 
-app.get('/movies/:title', async (req, res) => {
+app.get('/api/movies/:title', async (req, res) => {
 
     const {title} = req.params  
 
