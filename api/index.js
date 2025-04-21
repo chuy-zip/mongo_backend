@@ -31,6 +31,22 @@ app.get('/api/movies/:title', async (req, res) => {
     }
 })
 
+app.get('/movies/:title', async (req, res) => {
+
+    const {title} = req.params  
+
+    try {
+        const movie = await findMovieByTitle(title)
+        if (!movie) {
+            return res.status(404).send('Movie not found');
+        } else {
+            res.status(200).json(movie)
+        }
+    } catch (error) {
+        res.status(500).send('Server error');
+    }
+})
+
 app.get('/api', (req, res) => {
     res.json({ message: 'Hello from Express api with vercel!' });
 });
