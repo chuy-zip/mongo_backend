@@ -1,0 +1,38 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Install Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # Use the Node.js version of porject
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run ESLint to check for code errors 
+      - name: Run ESLint
+        run: npx eslint . --ext .js
+        continue-on-error: false  # Ensure the workflow fails on errors
+
+      # Deploy to Vercel (only runs if the previous steps pass)
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}  # Use the Vercel token from GitHub Secrets
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }} 
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}  # Add if using a specific project
