@@ -27,7 +27,7 @@ app.get('/movies/:title', async (req, res) => {
             res.status(200).json(movie)
         }
     } catch (error) {
-        
+        res.status(500).send('Server error');
     }
 })
 
