@@ -10,15 +10,19 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
     res.json({ message: 'Base url test!' });
-  });
+});
 
 
 app.get('/api', (req, res) => {
-  res.json({ message: 'Hello from Express api with vercel!' });
+    res.json({ message: 'Hello from Express api with vercel!' });
 });
 
 app.get('/api/hi', (req, res) => {
-  res.json({ message: 'Hi!' });
+    res.json({ message: 'Hi!' });
+});
+
+app.get('/api/actions', (req, res) => {
+    res.json({ message: 'Action works!' });
 });
 
 app.listen(port, () => {
