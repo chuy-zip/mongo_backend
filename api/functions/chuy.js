@@ -12,3 +12,14 @@ export async function findMovieByTitle(title) {
 
   return await movies.findOne(query, options);
 }
+
+export async function getUserByUsername(username) {
+  try {
+    const db = await getDb();
+    const users = db.collection("users");
+    return await users.findOne({ user_name: username });
+  } catch (error) {
+    console.error("Failed to fetch user:", error);
+    throw error;
+  }
+}

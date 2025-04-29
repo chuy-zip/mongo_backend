@@ -17,7 +17,7 @@ async function connect() {
   return client;
 }
 
-async function getDb(dbName = "sample_mflix") {
+async function getDb(dbName = "sabor_dos") {
   const client = await connect();
   return client.db(dbName);
 }

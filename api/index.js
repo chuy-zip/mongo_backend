@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername } from './functions/chuy.js';
 import cors from 'cors'
 
 const test = ""
@@ -31,16 +31,17 @@ app.get('/api/movies/:title', async (req, res) => {
     }
 })
 
-app.get('/movies/:title', async (req, res) => {
+app.get('/api/user/:username', async (req, res) => {
 
-    const {title} = req.params  
-
+    const { username } = req.params
+    
     try {
-        const movie = await findMovieByTitle(title)
-        if (!movie) {
-            return res.status(404).send('Movie not found');
+        const user = await getUserByUsername(username)
+
+        if(!user) {
+            return res.status(404).send('User not found')
         } else {
-            res.status(200).json(movie)
+            res.status(200).json(user)
         }
     } catch (error) {
         res.status(500).send('Server error');
