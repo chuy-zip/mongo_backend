@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle, getUserByUsername, getAllRestaurants } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName } from './functions/chuy.js';
 import cors from 'cors'
 
 const test = ""
@@ -61,7 +61,26 @@ app.get('/api/restaurants', async (req, res) => {
                 
     } catch (error) {
         console.error(error)
-        res.status(500).send({msg: 'Server error', error})
+        res.status(500).send('Server error')
+    }
+})
+
+app.get('/api/restaurants/dishes/:restaurant_name', async (req, res) => {
+
+    const { restaurant_name } =  req.params
+
+    try {
+        const restaurant_dishes = await getDishesByRestaurantName(restaurant_name)
+
+        if(!restaurant_dishes){
+            return res.status(400).send('No dishes were found for the restaurant')
+        } else {
+            return res.status(200).json(restaurant_dishes)
+        }
+                
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Server error')
     }
 })
 

@@ -36,3 +36,46 @@ export async function getAllRestaurants() {
     throw error;
   }
 }
+
+export async function getDishesByRestaurantName(restaurant_name) {
+  try {
+    const db = await getDb();
+    const restaurants = db.collection("restaurants");
+    
+    const pipeline = [
+      {
+        '$match': {
+          'restaurant_name': restaurant_name
+        }
+      }, {
+        '$lookup': {
+          'from': 'dishes', 
+          'localField': 'dishes', 
+          'foreignField': 'dish_id', 
+          'as': 'restaurant_dishes'
+        }
+      }, {
+        '$unwind': '$restaurant_dishes'
+      }, {
+        '$replaceRoot': {
+          'newRoot': '$restaurant_dishes'
+        }
+      }, {
+        '$project': {
+          '_id': 0, 
+          'dish_id': 1, 
+          'name': 1, 
+          'description': 1, 
+          'price': 1, 
+          'img': 1
+        }
+      }
+    ];
+
+    return await restaurants.aggregate(pipeline).toArray()
+
+  } catch (error) {
+    console.error("Failed to fetch restaurant's dishes:", error);
+    throw error;
+  }
+}
