@@ -23,3 +23,16 @@ export async function getUserByUsername(username) {
     throw error;
   }
 }
+
+export async function getAllRestaurants() {
+  try {
+    const db = await getDb();
+    const restaurants = db.collection("restaurants");
+    const cursor = await restaurants.find({});
+    return await cursor.toArray();
+
+  } catch (error) {
+    console.error("Failed to fetch restaurants:", error);
+    throw error;
+  }
+}
