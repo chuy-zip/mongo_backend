@@ -48,7 +48,7 @@ export async function getLastIdFromCollection(collection_name) {
 
     const result = await collection.aggregate(pipeline).toArray()
 
-    return result[0]
+    return result[0]["maxId"]
   } catch (error) {
     console.error("Failed to get max id: ", error);
     throw error;
@@ -119,6 +119,26 @@ export async function getDishesByRestaurantName(restaurant_name) {
 
   } catch (error) {
     console.error("Failed to fetch restaurant's dishes:", error);
+    throw error;
+  }
+}
+
+export async function createUser(user_data) {
+  try {
+    const biggestId = await getLastIdFromCollection("users");
+    const db = await getDb();
+    const users = db.collection("users");
+
+    // this is to make the user_id go first as the rest of the documents :)
+    const newUser = {
+      user_id: biggestId + 1,  
+      ...user_data             
+    };
+
+    await users.insertOne(newUser);
+    return newUser;
+  } catch (error) {
+    console.error("Failed to create user:", error);
     throw error;
   }
 }

@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser } from './functions/chuy.js';
 import cors from 'cors'
 
 const test = ""
@@ -60,6 +60,24 @@ app.get('/api/user/:username', async (req, res) => {
 
         if(!user) {
             return res.status(404).send('User not found')
+        } else {
+            res.status(200).json(user)
+        }
+    } catch (error) {
+        res.status(500).send('Server error');
+    }
+})
+
+app.post('/api/user', async (req, res) => {
+
+    const user_data = req.body
+
+    try {
+
+        const user = await createUser(user_data)
+
+        if(!user) {
+            return res.status(404).send('User was not created')
         } else {
             res.status(200).json(user)
         }
