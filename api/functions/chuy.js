@@ -149,3 +149,24 @@ export async function createUser(user_data) {
     throw error;
   }
 }
+
+export async function createRestaurant(restaurant_data) {
+  try {
+    const biggestId = await getLastIdFromCollection("restaurants");
+    const db = await getDb();
+    const restaurants = db.collection("restaurants");
+
+    // this is to make the restaurant_id go first as the rest of the documents :)
+    const newRestaurant = {
+      restaurant_id: biggestId + 1,  
+      ...restaurant_data             
+    };
+
+    //await restaurants.insertOne(newUser);
+    console.log(newRestaurant)
+    return newRestaurant;
+  } catch (error) {
+    console.error("Failed to create restaurant:", error);
+    throw error;
+  }
+}
