@@ -13,6 +13,49 @@ export async function findMovieByTitle(title) {
   return await movies.findOne(query, options);
 }
 
+export async function getLastIdFromCollection(collection_name) {
+
+  const id_dictionary = {
+    "dishes":"dish_id",
+    "orders":"order_id",
+    "reviews": "review_id",
+    "users": "user_id",
+    "restaurants": "restaurant_id"
+  }
+
+  const colection_id = id_dictionary[collection_name]
+  try {
+    const db = await getDb();
+    const collection = db.collection(collection_name)
+    const dollar = "$"
+    const path = dollar + colection_id 
+    
+    const pipeline = [
+      {
+        '$group': {
+          '_id': null, 
+          'maxId': {
+            '$max': path
+          }
+        }
+      }, {
+        '$project': {
+          '_id': 0, 
+          'maxId': 1
+        }
+      }
+    ]
+
+    const result = await collection.aggregate(pipeline).toArray()
+
+    return result[0]
+  } catch (error) {
+    console.error("Failed to get max id: ", error);
+    throw error;
+  }
+  
+}
+
 export async function getUserByUsername(username) {
   try {
     const db = await getDb();

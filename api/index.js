@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection } from './functions/chuy.js';
 import cors from 'cors'
 
 const test = ""
@@ -29,6 +29,26 @@ app.get('/api/movies/:title', async (req, res) => {
     } catch (error) {
         res.status(500).send('Server error');
     }
+})
+
+app.get('/api/test/getMaxId/:collection_name', async (req, res) => {
+
+    const { collection_name } = req.params
+
+    try {
+        
+        const max_id = await getLastIdFromCollection(collection_name)
+
+        if(!max_id){
+            return res.status(400).send(`No max id was found for collection: ${collection_name}`);
+        } else {
+            return res.status(200).json(max_id)
+        }
+
+    } catch (error) {
+        res.status(500).send('Server error');
+    }
+    
 })
 
 app.get('/api/user/:username', async (req, res) => {
