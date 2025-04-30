@@ -38,9 +38,9 @@ app.get('/api/test/getMaxId/:collection_name', async (req, res) => {
     try {
         
         const max_id = await getLastIdFromCollection(collection_name)
-
+        
         if(!max_id){
-            return res.status(400).send(`No max id was found for collection: ${collection_name}`);
+            return res.status(400).send(`No max id was found for collection: ${collection_name}. Max_id is ${max_id}`);
         } else {
             return res.status(200).json(max_id)
         }

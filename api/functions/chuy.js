@@ -14,46 +14,53 @@ export async function findMovieByTitle(title) {
 }
 
 export async function getLastIdFromCollection(collection_name) {
-
+  
   const id_dictionary = {
-    "dishes":"dish_id",
-    "orders":"order_id",
+    "dishes": "dish_id",
+    "orders": "order_id",
     "reviews": "review_id",
     "users": "user_id",
     "restaurants": "restaurant_id"
+  };
+
+  const collection_id = id_dictionary[collection_name];
+  
+  if (!collection_id) {
+    throw new Error(`No ID field mapping found for collection: ${collection_name}`);
   }
 
-  const colection_id = id_dictionary[collection_name]
   try {
     const db = await getDb();
-    const collection = db.collection(collection_name)
-    const dollar = "$"
-    const path = dollar + colection_id 
+    const collection = db.collection(collection_name);
     
     const pipeline = [
       {
-        '$group': {
-          '_id': null, 
-          'maxId': {
-            '$max': path
-          }
+        $group: {
+          _id: null,
+          maxId: { $max: `$${collection_id}` }
         }
-      }, {
-        '$project': {
-          '_id': 0, 
-          'maxId': 1
+      },
+      {
+        $project: {
+          _id: 0,
+          maxId: 1
         }
       }
-    ]
+    ];
 
-    const result = await collection.aggregate(pipeline).toArray()
-
-    return result[0]["maxId"]
+    const result = await collection.aggregate(pipeline).toArray();
+    
+    // If no documents exist or maxId is null or undefined
+    if (result.length === 0 || result[0].maxId == null) {
+      return 0;
+    }
+    
+    return result[0].maxId;
+    
   } catch (error) {
     console.error("Failed to get max id: ", error);
     throw error;
   }
-  
 }
 
 export async function getUserByUsername(username) {
