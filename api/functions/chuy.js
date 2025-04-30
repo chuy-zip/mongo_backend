@@ -162,8 +162,8 @@ export async function createRestaurant(restaurant_data) {
       ...restaurant_data             
     };
 
-    //await restaurants.insertOne(newUser);
-    console.log(newRestaurant)
+    await restaurants.insertOne(newRestaurant);
+    
     return newRestaurant;
   } catch (error) {
     console.error("Failed to create restaurant:", error);
