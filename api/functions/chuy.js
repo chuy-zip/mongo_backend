@@ -198,7 +198,7 @@ export async function getUserOrders(user_id) {
     const db = await getDb();
     const users = db.collection("users");
 
-    const int_user_id = parseInt(user_id) 
+    const int_user_id = parseInt(user_id)
 
     const pipeline = [
       {
@@ -209,9 +209,9 @@ export async function getUserOrders(user_id) {
         '$unwind': '$orders'
       }, {
         '$lookup': {
-          'from': 'dishes', 
-          'localField': 'orders.dishes.dish_id', 
-          'foreignField': 'dish_id', 
+          'from': 'dishes',
+          'localField': 'orders.dishes.dish_id',
+          'foreignField': 'dish_id',
           'as': 'orders.dishes'
         }
       }, {
@@ -220,19 +220,19 @@ export async function getUserOrders(user_id) {
         }
       }, {
         '$project': {
-          '_id': 0, 
-          'order_id': 1, 
-          'address': 1, 
-          'dishes': 1, 
-          'state': 1, 
-          'date': 1, 
+          '_id': 0,
+          'order_id': 1,
+          'address': 1,
+          'dishes': 1,
+          'state': 1,
+          'date': 1,
           'total': 1
         }
       }
     ]
 
     const result = await users.aggregate(pipeline).toArray()
-    
+
     return result
 
   } catch (error) {
@@ -243,42 +243,93 @@ export async function getUserOrders(user_id) {
 
 export async function addReviewIDToUserList(user_id, review_id) {
   try {
-      const db = await getDb();
-      const users = db.collection("users");
-      
-      await users.updateOne(
-          { user_id: user_id },
-          { $push: { reviews: review_id } }
-      );
+    const db = await getDb();
+    const users = db.collection("users");
+
+    await users.updateOne(
+      { user_id: user_id },
+      { $push: { reviews: review_id } }
+    );
   } catch (error) {
-      console.error("Failed to add review reference to user:", error);
-      throw error;
+    console.error("Failed to add review reference to user:", error);
+    throw error;
   }
 }
 
 export async function createRestaurantReview(review_data) {
   const db = await getDb();
-  
+
   try {
-      // Get next review ID
-      const biggestId = await getLastIdFromCollection("reviews");
-      
-      // Create review document
-      const newReview = {
-          review_id: biggestId + 1,
-          ...review_data,
-      };
+    // Get next review ID
+    const biggestId = await getLastIdFromCollection("reviews");
 
-      // Insert review
-      const reviews = db.collection("reviews");
-      await reviews.insertOne(newReview);
+    // Create review document
+    const newReview = {
+      review_id: biggestId + 1,
+      ...review_data,
+    };
 
-      // Add reference to user
-      await addReviewIDToUserList(newReview.user_id, newReview.review_id);
+    // Insert review
+    const reviews = db.collection("reviews");
+    await reviews.insertOne(newReview);
 
-      return newReview;
+    // Add reference to user
+    await addReviewIDToUserList(newReview.user_id, newReview.review_id);
+
+    return newReview;
   } catch (error) {
-      console.error("Failed to create review:", error);
-      throw error;
+    console.error("Failed to create review:", error);
+    throw error;
+  }
+}
+
+export async function getRestaurantsReviewsByID(restaurant_id) {
+  try {
+    const db = await getDb();
+    const reviews = db.collection("reviews");
+
+    const pipeline = [
+      {
+        $match: {
+          reviewed_item_id: restaurant_id,
+          type: "restaurant"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user_id",
+          foreignField: "user_id",
+          as: "user_info",
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                user_name: 1,
+                img: 1  
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: "$user_info"
+      },
+      {
+        $project: {
+          _id: 0,
+          review_id: 1,
+          rate: 1,
+          title: 1,
+          comment: 1,
+          created_at: 1,
+          user_info: 1
+        }
+      }
+    ];
+    return await reviews.aggregate(pipeline).toArray();
+  } catch (error) {
+    console.error("Failed to get reviews:", error);
+    throw error;
   }
 }
