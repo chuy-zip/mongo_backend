@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID, getUserOrders } from './functions/chuy.js';
 import cors from 'cors'
 
 const test = ""
@@ -115,6 +115,27 @@ app.post('/api/user/order', async (req, res) => {
         return res.status(200).send(order_placed)
     } catch (error) {
         console.error('Error placing user order:', error);
+        res.status(500).send('Server error');
+    }
+})
+
+app.get('/api/user/orders/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+
+    if(!user_id){
+        return res.status(400).send('Missing required parameter: user_id')
+    }
+
+    try {
+        const user_orders = await getUserOrders(user_id)
+
+        if(!user_orders){
+            return res.status(400).send('Could not get user orders')
+        }
+
+        return res.status(200).send(user_orders)
+    } catch (error) {
+        console.error('Error getting user orders:', error);
         res.status(500).send('Server error');
     }
 })
