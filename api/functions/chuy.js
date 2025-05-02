@@ -1,4 +1,5 @@
 import { getDb } from "../mongoClient.js";
+import { ObjectId } from 'mongodb';
 
 export async function findMovieByTitle(title) {
   const db = await getDb();
@@ -169,4 +170,24 @@ export async function createRestaurant(restaurant_data) {
     console.error("Failed to create restaurant:", error);
     throw error;
   }
+}
+
+export async function placeUserOrderByID(user_id, order_data) {
+  const db = await getDb();
+  const users = db.collection("users");
+
+  const order_id = new ObjectId(); 
+
+  const orderWithId = {
+    order_id, // genrate id
+    ...order_data,
+  };
+
+  //Push to the user's orders array
+  await users.updateOne(
+    { user_id: user_id },
+    { $push: { orders: orderWithId } }
+  );
+
+  return orderWithId;
 }

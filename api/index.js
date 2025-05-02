@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID } from './functions/chuy.js';
 import cors from 'cors'
 
 const test = ""
@@ -97,6 +97,27 @@ app.post('/api/user', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+app.post('/api/user/order', async (req, res) => {
+    const order_data = req.body;
+
+    if(!order_data.user_id || !order_data.order){
+        return res.status(400).send('Missing required fields: user_id, order')
+    }
+
+    try {
+        const order_placed = await placeUserOrderByID(order_data.user_id, order_data.order)
+
+        if(!order_placed){
+            return res.status(400).send('Order could not be placed for the user')
+        }
+
+        return res.status(200).send(order_placed)
+    } catch (error) {
+        console.error('Error placing user order:', error);
+        res.status(500).send('Server error');
+    }
+})
 
 app.post('/api/restaurant', async (req, res) => {
     const restaurant_data = req.body;
