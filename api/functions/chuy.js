@@ -240,3 +240,45 @@ export async function getUserOrders(user_id) {
     throw error;
   }
 }
+
+export async function addReviewIDToUserList(user_id, review_id) {
+  try {
+      const db = await getDb();
+      const users = db.collection("users");
+      
+      await users.updateOne(
+          { user_id: user_id },
+          { $push: { reviews: review_id } }
+      );
+  } catch (error) {
+      console.error("Failed to add review reference to user:", error);
+      throw error;
+  }
+}
+
+export async function createRestaurantReview(review_data) {
+  const db = await getDb();
+  
+  try {
+      // Get next review ID
+      const biggestId = await getLastIdFromCollection("reviews");
+      
+      // Create review document
+      const newReview = {
+          review_id: biggestId + 1,
+          ...review_data,
+      };
+
+      // Insert review
+      const reviews = db.collection("reviews");
+      await reviews.insertOne(newReview);
+
+      // Add reference to user
+      await addReviewIDToUserList(newReview.user_id, newReview.review_id);
+
+      return newReview;
+  } catch (error) {
+      console.error("Failed to create review:", error);
+      throw error;
+  }
+}
