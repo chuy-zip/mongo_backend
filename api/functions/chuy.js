@@ -80,8 +80,56 @@ export async function getAllRestaurants() {
   try {
     const db = await getDb();
     const restaurants = db.collection("restaurants");
-    const cursor = await restaurants.find({});
-    return await cursor.toArray();
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "reviews",
+          let: { restaurantId: "$restaurant_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$type", "restaurant"] },
+                    { $eq: [{ $toInt: "$reviewed_item_id" }, "$$restaurantId"] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "restaurant_reviews"
+        }
+      },
+      {
+        $addFields: {
+          rating: {
+            $cond: {
+              if: { $gt: [{ $size: "$restaurant_reviews" }, 0] },
+              then: { $avg: "$restaurant_reviews.rate" },
+              else: null
+            }
+          },
+          review_count: { $size: "$restaurant_reviews" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          restaurant_id: 1,
+          restaurant_name: 1,
+          address: 1,
+          dishes: 1,
+          coords: 1,
+          img: 1,
+          banner_img: 1,
+          rating: 1,
+          review_count: 1
+        }
+      }
+    ];
+
+    return await restaurants.aggregate(pipeline).toArray();
 
   } catch (error) {
     console.error("Failed to fetch restaurants:", error);
