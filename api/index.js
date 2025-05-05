@@ -1,5 +1,6 @@
 import express from 'express';
 import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID, getUserOrders, createRestaurantReview, getRestaurantsReviewsByID } from './functions/chuy.js';
+import { addDishesToRestaurant, clearReviewsContent, createOrderReview, deleteReview, editUserReview, getUserReviews, getUserReviewsWithRestaurantNames, updateUserInfo } from './functions/euni.js';
 import cors from 'cors'
 
 const test = ""
@@ -263,6 +264,129 @@ app.get('/api/restaurants/dishes/:restaurant_name', async (req, res) => {
         res.status(500).send('Server error')
     }
 })
+
+// update user info
+app.put('/api/users/:userId', async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    const { user_name, img } = req.body;
+  
+    try {
+      const updatedUser = await updateUserInfo(userId, user_name, img);
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+});
+
+// editar reseña de un usuario
+app.put('/api/reviews/:reviewId', async (req, res) => {
+    const reviewId = parseInt(req.params.reviewId);
+    const { user_id, title, comment, rate } = req.body;
+  
+    if (!user_id) {
+      return res.status(400).send('User ID is required');
+    }
+  
+    try {
+      const updated = await editUserReview(user_id, reviewId, title, comment, rate);
+      if (updated) {
+        res.status(200).send('Review updated');
+      } else {
+        res.status(404).send('Review not found or not updated');
+      }
+    } catch (error) {
+      res.status(400).send(error.message);
+    }
+});
+
+app.post('/api/reviews/order', async (req, res) => {
+    const { user_id, rate, title, comment, reviewed_item_id } = req.body;
+  
+    // Validación
+    if (!user_id || !rate || !title || !comment || !reviewed_item_id) {
+      return res.status(400).send('Missing fields');
+    }
+  
+    try {
+      const review = await createOrderReview(user_id, rate, title, comment, reviewed_item_id);
+      res.status(201).json(review);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send(error.message);
+    }
+});
+
+app.delete('/api/reviews/:user_id/:review_id', async (req, res) => {
+    const user_id = parseInt(req.params.user_id);
+    const review_id = parseInt(req.params.review_id);
+  
+    try {
+      const result = await deleteReview(user_id, review_id);
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+});
+
+app.delete('/api/reviews/all/:user_id', async (req, res) => {
+    const user_id = parseInt(req.params.user_id);
+  
+    try {
+      const result = await deleteAllReviewsForUser(user_id);
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+});
+
+app.put('/api/reviews/clear/:user_id', async (req, res) => {
+    const user_id = parseInt(req.params.user_id);
+  
+    try {
+      const result = await clearReviewsContent(user_id);
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+});
+  
+app.post('/api/restaurants/:restaurant_id/dishes', async (req, res) => {
+    const restaurant_id = parseInt(req.params.restaurant_id);
+    const dishesList = req.body.dishes;
+  
+    if (!Array.isArray(dishesList) || dishesList.length === 0) {
+      return res.status(400).send('You must provide an array of dishes');
+    }
+  
+    try {
+      const result = await addDishesToRestaurant(restaurant_id, dishesList);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send(error.message);
+    }
+});
+  
+app.get('/api/users/:user_id/reviews', async (req, res) => {
+    const user_id = parseInt(req.params.user_id);
+  
+    try {
+      const reviews = await getUserReviewsWithRestaurantNames(user_id);
+  
+      if (reviews.length === 0) {
+        return res.status(404).send('No reviews found for this user');
+      }
+  
+      res.json(reviews);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  });
 
 app.get('/api', (req, res) => {
     res.json({ message: 'Hello from Express api with vercel!' });
