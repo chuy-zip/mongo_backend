@@ -1,5 +1,5 @@
 import express from 'express';
-import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant } from './functions/chuy.js';
+import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID, getUserOrders, createRestaurantReview, getRestaurantsReviewsByID } from './functions/chuy.js';
 import { addDishesToRestaurant, clearReviewsContent, createOrderReview, deleteReview, editUserReview, getUserReviews, getUserReviewsWithRestaurantNames, updateUserInfo } from './functions/euni.js';
 import cors from 'cors'
 
@@ -99,6 +99,84 @@ app.post('/api/user', async (req, res) => {
     }
 });
 
+app.post('/api/user/order', async (req, res) => {
+    const order_data = req.body;
+
+    if(!order_data.user_id || !order_data.order){
+        return res.status(400).send('Missing required fields: user_id, order')
+    }
+
+    try {
+        const order_placed = await placeUserOrderByID(order_data.user_id, order_data.order)
+
+        if(!order_placed){
+            return res.status(400).send('Order could not be placed for the user')
+        }
+
+        return res.status(200).send(order_placed)
+    } catch (error) {
+        console.error('Error placing user order:', error);
+        res.status(500).send('Server error');
+    }
+})
+
+app.get('/api/user/orders/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+
+    if(!user_id){
+        return res.status(400).send('Missing required parameter: user_id')
+    }
+
+    try {
+        const user_orders = await getUserOrders(user_id)
+
+        if(!user_orders){
+            return res.status(400).send('Could not get user orders')
+        }
+
+        return res.status(200).send(user_orders)
+    } catch (error) {
+        console.error('Error getting user orders:', error);
+        res.status(500).send('Server error');
+    }
+})
+
+app.post('/api/user/review_restaurant', async (req, res) => {
+    const review_data = req.body;
+
+    // eval body
+    if (!review_data.user_id || !review_data.type || !review_data.rate || 
+        !review_data.title || !review_data.comment || !review_data.reviewed_item_id) {
+        return res.status(400).json('Missing required elements in body');
+    }
+
+    // restaurant review validation
+    if (review_data.type !== "restaurant") {
+        return res.status(400).json('Review type must be "restaurant"');
+    }
+
+    // ratin 1-5
+    if (review_data.rate < 1 || review_data.rate > 5) {
+        return res.status(400).json('Rating must be between 1 and 5');
+    }
+
+    try {
+        
+        const created_review = await createRestaurantReview(review_data)
+
+        if(!created_review){
+            return res.status(400).json("Could not create review");
+        }
+
+        return res.status(201).json(created_review);
+    } catch (error) {
+        console.error('Error creating user review:', error);
+        res.status(500).send('Server error');
+    }
+
+    
+})
+
 app.post('/api/restaurant', async (req, res) => {
     const restaurant_data = req.body;
 
@@ -142,6 +220,24 @@ app.get('/api/restaurants', async (req, res) => {
             return res.status(400).send('No restaurants were found')
         } else {
             return res.status(200).json(restaurants)
+        }
+                
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Server error')
+    }
+})
+
+app.get('/api/restaurant/reviews/:restaurant_id', async (req, res) => {
+
+    const { restaurant_id } = req.params
+    try {
+        const restaurant_reviews = await getRestaurantsReviewsByID(restaurant_id)
+
+        if(!restaurant_reviews){
+            return res.status(400).send('Error getting reviews')
+        } else {
+            return res.status(200).json(restaurant_reviews)
         }
                 
     } catch (error) {
