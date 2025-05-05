@@ -1,6 +1,6 @@
 import express from 'express';
 import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID, getUserOrders, createRestaurantReview, getRestaurantsReviewsByID } from './functions/chuy.js';
-import { addDishesToRestaurant, clearReviewsContent, createOrderReview, deleteReview, editUserReview, getUserReviews, getUserReviewsWithRestaurantNames, updateUserInfo } from './functions/euni.js';
+import { addDishesToRestaurant, clearReviewsContent, createOrderReview, deleteAllReviewsForUser, deleteReview, editUserReview, getUserReviews, getUserReviewsWithRestaurantNames, updateUserInfo } from './functions/euni.js';
 import cors from 'cors'
 
 const test = ""
