@@ -1,6 +1,6 @@
 import express from 'express';
 import { findMovieByTitle, getUserByUsername, getAllRestaurants, getDishesByRestaurantName, getLastIdFromCollection, createUser, createRestaurant, placeUserOrderByID, getUserOrders, createRestaurantReview, getRestaurantsReviewsByID } from './functions/chuy.js';
-import { addDishesToRestaurant, clearReviewsContent, createOrderReview, deleteAllReviewsForUser, deleteReview, editUserReview, getUserReviews, getUserReviewsWithRestaurantNames, updateUserInfo } from './functions/euni.js';
+import { addDishesToRestaurant, clearReviewsContent, createOrderReview, deleteAllReviewsForUser, deleteReview, editUserReview, getTopDishesFromDB, getUserReviews, getUserReviewsWithRestaurantNames, updateUserInfo } from './functions/euni.js';
 import cors from 'cors'
 
 const test = ""
@@ -386,7 +386,18 @@ app.get('/api/users/:user_id/reviews', async (req, res) => {
       console.error(error);
       res.status(500).send('Server error');
     }
-  });
+});
+
+app.get('/api/top-dishes', async (req, res) => {
+    try {
+      const topDishes = await getTopDishesFromDB();
+      res.json(topDishes);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error fetching top dishes" });
+    }
+});
+  
 
 app.get('/api', (req, res) => {
     res.json({ message: 'Hello from Express api with vercel!' });

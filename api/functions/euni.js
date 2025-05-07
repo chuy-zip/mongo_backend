@@ -214,3 +214,54 @@ export async function getUserReviewsWithRestaurantNames(user_id) {
   
     return reviews;
 }
+
+// 3 platillos más vendidos
+export async function getTopDishesFromDB() {
+  const db = await getDb();
+  
+  return await db.collection('users').aggregate([
+    { $unwind: "$orders" },
+    { $unwind: "$orders.dishes" },
+    {
+      $group: {
+        _id: "$orders.dishes.dish_id",
+        totalSold: { $sum: "$orders.dishes.quantity" }
+      }
+    },
+    { $sort: { totalSold: -1 } },
+    { $limit: 3 },
+    {
+      $lookup: {
+        from: "dishes",
+        localField: "_id",
+        foreignField: "dish_id",
+        as: "dishInfo"
+      }
+    },
+    { $unwind: "$dishInfo" },
+    {
+      $lookup: {
+        from: "restaurants",
+        let: { dishId: "$_id" },
+        pipeline: [
+          { $match: { $expr: { $in: ["$$dishId", "$dishes"] } } },
+          { $project: { restaurant_name: 1, _id: 0 } }
+        ],
+        as: "restaurantInfo"
+      }
+    },
+    { $unwind: "$restaurantInfo" },
+    {
+      $project: {
+        _id: 0,
+        dish_id: "$_id",
+        name: "$dishInfo.name",
+        description: "$dishInfo.description",
+        price: "$dishInfo.price",
+        img: "$dishInfo.img",
+        totalSold: 1,
+        restaurant: "$restaurantInfo.restaurant_name"
+      }
+    }
+  ]).toArray();
+}
